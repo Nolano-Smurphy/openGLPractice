@@ -1,4 +1,5 @@
-//Author: Nolan Murphy
+//Original Tutorial Followed: https://open.gl/context
+//Code Copier/Writer: Nolan Murphy
 //Version 0.1
 
 #define GLEW_STATIC
