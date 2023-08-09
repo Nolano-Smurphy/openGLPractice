@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(maingl VERSION 0.1)
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+
 find_package(OpenGL REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(GLEW REQUIRED)

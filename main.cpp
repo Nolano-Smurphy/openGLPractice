@@ -26,11 +26,55 @@ int main(int argc, char *argv[])
     GLuint vertexBuffer;
     glGenBuffers(1, &vertexBuffer);
 
-    printf("%u\n", vertexBuffer);
-
     SDL_Event windowEvent;
     while (true)
     {
+        float vertices[] = {
+            0.0f, 0.0f,
+            0.0f, 0.4f,
+            0.3f, 0.0f
+        };
+        GLuint vertexBufObj;
+        glGenBuffers(1, &vertexBufObj);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBufObj);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        //TODO: Import the shader by reading the .vert file
+        const char* vertexSource = R"glsl(
+            #version 150 core
+            in vec2 position;
+            void main() {
+                gl_Position = vec4(position, 0.0, 1.0);
+            }
+        )glsl";
+
+        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertexShader, 1, &vertexSource, NULL);
+        glCompileShader(vertexShader);
+        GLint vertStatus;
+        glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertStatus);
+
+        //TODO: Import the shader by reading the .frag file
+        const char* fragmentSource = R"glsl(
+            #version 150 core
+            out vec4 outColor;
+            void main() {
+                outColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        )glsl";
+
+        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+        glCompileShader(fragmentShader);
+        GLint fragStatus;
+        glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragStatus);
+
+        printf("Vertex Status: %d\nFragment Status: %d", vertStatus, fragStatus);
+
+        GLuint shaderPrgram = glCreateProgram();
+        glAttachShader(shaderPrgram, vertexShader);
+        glAttachShader(shaderPrgram, fragmentShader);
+        
         if (SDL_PollEvent(&windowEvent))
         {
             if (windowEvent.type == SDL_QUIT) break;
