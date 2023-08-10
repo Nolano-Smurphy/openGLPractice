@@ -32,7 +32,8 @@ const char *fragmentSource = R"glsl(
 
 int main(int argc, char *argv[])
 {
-    auto t_start = std::chrono::high_resolution_clock::now();
+    //Code related to using a uniform to oscilate color was readded but commented out.
+    //auto t_start = std::chrono::high_resolution_clock::now();
 
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -123,6 +124,11 @@ int main(int argc, char *argv[])
             if (windowEvent.type == SDL_KEYUP && windowEvent.key.keysym.sym == SDLK_ESCAPE)
                 drawing = false;
         }
+
+        //auto t_start = std::chrono::high_resolution_clock::now();
+        //float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+        //glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
+
 
         // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
