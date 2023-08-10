@@ -1,6 +1,6 @@
 //Original Tutorial Followed: https://open.gl/context
 //Code Copier/Writer: Nolan Murphy
-//Version 0.1
+//Version 0.2
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
         //Optional data to ensure the shaders compiled correctly.
         GLint fragStatus;
         glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragStatus);
+        //1 - Success; 0 - Compiler Error;
         printf("Vertex Status: %d\nFragment Status: %d", vertStatus, fragStatus);
 
         GLuint shaderProgram = glCreateProgram();
