@@ -1,6 +1,6 @@
 // Original Tutorial Followed: https://open.gl/context
 // Code Copier/Writer: Nolan Murphy
-// Version 0.2
+// Version 0.2.1
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -12,7 +12,10 @@
 const char *vertexSource = R"glsl(
     #version 150 core
     in vec2 position;
+    in vec3 color;
+    out vec3 Color;
     void main() {
+        Color = color;
         gl_Position = vec4(position, 0.0, 1.0);
     }
 )glsl";
@@ -20,10 +23,10 @@ const char *vertexSource = R"glsl(
 // TODO: Import the shader by reading the .frag file
 const char *fragmentSource = R"glsl(
     #version 150 core
-    uniform vec3 triangleColor;
+    in vec3 Color;
     out vec4 outColor;
     void main() {
-        outColor = vec4(triangleColor, 1.0);
+        outColor = vec4(Color, 1.0);
     }
 )glsl";
 
@@ -51,9 +54,10 @@ int main(int argc, char *argv[])
     SDL_Event windowEvent;
 
     float vertices[] = {
-        0.0f, 0.0f,
-        0.0f, 0.4f,
-        0.3f, 0.0f};
+        0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.4f, 0.0f, 1.0f, 0.0f,
+        0.3f, 0.0f, 1.0f, 0.0f, 0.0f
+    };
 
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -95,15 +99,15 @@ int main(int argc, char *argv[])
 
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
     // GL_FALSE since the position values don't need to be normalized.
-    // First zero (arg 4) is because position is the only attribute the vertices have.
-    /// If they had more data (i.e. color), this value would be non-zero
-    /// to indicate the number of bytes until the next vertex position data.
+    // Fifth arg indicates the number of bytes until the next vertex position data.
     // The second zero (last arg) is because there is zero bytes of offset to find the first position.
-    /// Position is the first attribute given to a vertex in this example.
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    /// 'Position" is the first attribute given to a vertex in this example.
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), 0);
     glEnableVertexAttribArray(posAttrib);
 
-    GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
+    GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+    glEnableVertexAttribArray(colAttrib);
+    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
 
     // vertices is an array of floats, but has 2 values per vertex.
     int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
@@ -120,15 +124,21 @@ int main(int argc, char *argv[])
                 drawing = false;
         }
 
-        //Cause the arrow to oscilate between black and red as a functon of difference in time.
-        auto t_now = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-        glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
+        // Clear the screen to black
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         // 0 - Number of vertices to skip.
         glDrawArrays(GL_TRIANGLES, 0, numberOfVertices);
         SDL_GL_SwapWindow(window);
     }
+
+    //Clean Up
+    glDeleteProgram(shaderProgram);
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+    glDeleteBuffers(1, &vertexBufObj);
+    glDeleteVertexArrays(1, &vao);
 
     SDL_GL_DeleteContext(context);
     SDL_Quit();
