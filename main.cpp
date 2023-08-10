@@ -27,13 +27,20 @@ int main(int argc, char *argv[])
     glGenBuffers(1, &vertexBuffer);
 
     SDL_Event windowEvent;
-    while (true)
-    {
-        float vertices[] = {
+
+    float vertices[] = {
             0.0f, 0.0f,
             0.0f, 0.4f,
             0.3f, 0.0f
-        };
+    };
+
+    while (true)
+    {
+
+        GLuint vao;
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+
         GLuint vertexBufObj;
         glGenBuffers(1, &vertexBufObj);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBufObj);
@@ -51,6 +58,8 @@ int main(int argc, char *argv[])
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, 1, &vertexSource, NULL);
         glCompileShader(vertexShader);
+
+        //Optional data to ensure the vertex shader compiled correctly.
         GLint vertStatus;
         glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertStatus);
 
@@ -66,14 +75,38 @@ int main(int argc, char *argv[])
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
         glCompileShader(fragmentShader);
+
+        //Optional data to ensure the shaders compiled correctly.
         GLint fragStatus;
         glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragStatus);
-
         printf("Vertex Status: %d\nFragment Status: %d", vertStatus, fragStatus);
 
-        GLuint shaderPrgram = glCreateProgram();
-        glAttachShader(shaderPrgram, vertexShader);
-        glAttachShader(shaderPrgram, fragmentShader);
+        GLuint shaderProgram = glCreateProgram();
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, fragmentShader);
+
+        //Not necessary at the moment but useful when there are multiple outputs to manage to multiple framebuffers.
+        glBindFragDataLocation(shaderProgram, 0, "outColor");
+
+        glLinkProgram(shaderProgram);
+        //Only 1 program can be active at a time.
+        glUseProgram(shaderProgram);
+
+        GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+        //GL_FALSE since the position values don't need to be normalized.
+        //First zero (arg 4) is because position is the only attribute the vertices have.
+            ///If they had more data (i.e. color), this value would be non-zero 
+            ///to indicate the number of bytes until the next vertex position data.
+        //The second zero (last arg) is because there is zero bytes of offset to find the first position.
+            ///Position is the first attribute given to a vertex in this example.
+        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+        glEnableVertexAttribArray(posAttrib);
+
+        //3 - Vertices is an array of floats, but has 2 values per vertex.
+        int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
+        //0 - Number of vertices to skip.
+        glDrawArrays(GL_TRIANGLES, 0, numberOfVertices);
         
         if (SDL_PollEvent(&windowEvent))
         {
