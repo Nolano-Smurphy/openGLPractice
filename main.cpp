@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#include <chrono>
 
 // TODO: Import the shader by reading the .vert file
 const char *vertexSource = R"glsl(
@@ -19,14 +20,17 @@ const char *vertexSource = R"glsl(
 // TODO: Import the shader by reading the .frag file
 const char *fragmentSource = R"glsl(
     #version 150 core
+    uniform vec3 triangleColor;
     out vec4 outColor;
     void main() {
-        outColor = vec4(1.0, 1.0, 1.0, 1.0);
+        outColor = vec4(triangleColor, 1.0);
     }
-    )glsl";
+)glsl";
 
 int main(int argc, char *argv[])
 {
+    auto t_start = std::chrono::high_resolution_clock::now();
+
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -99,20 +103,30 @@ int main(int argc, char *argv[])
     glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(posAttrib);
 
-    while (true)
-    {
-        // vertices is an array of floats, but has 2 values per vertex.
-        int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
-        // 0 - Number of vertices to skip.
-        glDrawArrays(GL_TRIANGLES, 0, numberOfVertices);
+    GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
 
+    // vertices is an array of floats, but has 2 values per vertex.
+    int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
+
+    bool drawing = true;
+
+    while (drawing)
+    {
         if (SDL_PollEvent(&windowEvent))
         {
             if (windowEvent.type == SDL_QUIT)
-                break;
+                drawing = false;
             if (windowEvent.type == SDL_KEYUP && windowEvent.key.keysym.sym == SDLK_ESCAPE)
-                break;
+                drawing = false;
         }
+
+        //Cause the arrow to oscilate between black and red as a functon of difference in time.
+        auto t_now = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+        glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
+
+        // 0 - Number of vertices to skip.
+        glDrawArrays(GL_TRIANGLES, 0, numberOfVertices);
         SDL_GL_SwapWindow(window);
     }
 
