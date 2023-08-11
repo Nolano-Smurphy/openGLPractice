@@ -12,7 +12,7 @@
 #include <fstream>
 #include <string>
 
-// TODO: Import the shader by reading the .vert file
+const int ATTR_PER_VERTEX = 5;
 const char *vertexSource;
 const char *fragmentSource;
 
@@ -63,19 +63,15 @@ int main(int argc, char *argv[])
     SDL_Event windowEvent;
 
     float vertices[] = {
-        0.0f, 0.0f, 0.5f,
-        0.0f, 0.4f, 0.2f,
-        0.3f, 0.0f, 1.0f
-        /*
         0.0f, 0.0f, 0.0f, 0.0f, 1.0f,  //0
         0.0f, 0.4f, 0.0f, 1.0f, 0.0f,  //1
         0.3f, 0.0f, 1.0f, 0.0f, 0.0f,  //2
         0.3f, 0.4f, 1.0f, 1.0f, 1.0f   //3
-        */
     };
 
     GLuint elements[] {
-        0, 1, 2
+        0, 1, 2,
+        2, 3, 1
     };
 
     GLuint vao;
@@ -136,14 +132,12 @@ int main(int argc, char *argv[])
     // Fifth arg indicates the number of bytes until the next vertex position data.
     // The second zero (last arg) is because there is zero bytes of offset to find the first position.
     /// 'Position" is the first attribute given to a vertex in this example.
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, (3*sizeof(GLfloat)), 0);
-    //glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), 0);
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, (ATTR_PER_VERTEX * sizeof(GLfloat)), 0);
     glEnableVertexAttribArray(posAttrib);
 
     GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
     glEnableVertexAttribArray(colAttrib);
-    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (3*sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
-    //glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
+    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (ATTR_PER_VERTEX * sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
 
     // vertices is an array of floats, but has 2 values per vertex.
     //int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
@@ -175,6 +169,8 @@ int main(int argc, char *argv[])
     }
 
     //Clean Up
+    delete vertexSource;
+    delete fragmentSource;
     glDeleteProgram(shaderProgram);
     glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
