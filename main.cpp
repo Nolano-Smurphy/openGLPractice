@@ -6,33 +6,34 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+
 #include <chrono>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 // TODO: Import the shader by reading the .vert file
-const char *vertexSource = R"glsl(
-    #version 150 core
-    in vec2 position;
-    //in vec3 color;
-    in float color;
-    out vec3 Color;
-    
-    void main() {
-        Color = vec3(color, color, color);
-        gl_Position = vec4(position, 0.0, 1.0);
-        //gl_Position = vec4(position.x, (position.y * -1.0), 0.0, 1.0); This will flip the triangle upside-down.
-    }
-)glsl";
+const char *vertexSource;
+const char *fragmentSource;
 
-// TODO: Import the shader by reading the .frag file
-const char *fragmentSource = R"glsl(
-    #version 150 core
-    in vec3 Color;
-    out vec4 outColor;
-    void main() {
-        outColor = vec4(Color, 1.0);
-        //outColor = vec4(1.0 - Color.r, 1.0 - Color.g, 1.0 - Color.b, 1.0); This will invert the colors.
+//Thanks to https://stackoverflow.com/questions/195323/what-is-the-most-elegant-way-to-read-a-text-file-with-c/195350#195350 for ths function.
+void readShaderFromFile(const char*& shade, std::string filePath) {
+    std::ifstream file (filePath, std::ios::in|std::ios::binary|std::ios::ate);
+    if (file.is_open())
+    {
+        //Find the end to calculate how much space is needed.
+        file.seekg(0, std::ios::end);
+        size_t size = file.tellg();
+        //Create a space in internal storage to load the contents of the external file into the program
+        char *contents = new char [size];
+        //Move the pointer back to the start of the file so the contents can be properly read.
+        file.seekg (0, std::ios::beg);
+        file.read (contents, size);
+        file.close();
+        //Copy the contents from the temporary variable into the pass-by-reference.
+        shade = contents;
     }
-)glsl";
+}
 
 int main(int argc, char *argv[])
 {
@@ -53,6 +54,9 @@ int main(int argc, char *argv[])
     glewExperimental = GL_TRUE;
     glewInit();
 
+    readShaderFromFile(vertexSource, "../resources/vertexShader.vert");
+    readShaderFromFile(fragmentSource, "../resources/fragmentShader.frag");
+    
     GLuint vertexBuffer;
     glGenBuffers(1, &vertexBuffer);
 
