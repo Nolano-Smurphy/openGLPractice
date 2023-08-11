@@ -1,6 +1,6 @@
 // Original Tutorial Followed: https://open.gl/context
 // Code Copier/Writer: Nolan Murphy
-// Version 0.2.1
+// Version 0.2.2
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -12,11 +12,14 @@
 const char *vertexSource = R"glsl(
     #version 150 core
     in vec2 position;
-    in vec3 color;
+    //in vec3 color;
+    in float color;
     out vec3 Color;
+    
     void main() {
-        Color = color;
+        Color = vec3(color, color, color);
         gl_Position = vec4(position, 0.0, 1.0);
+        //gl_Position = vec4(position.x, (position.y * -1.0), 0.0, 1.0); This will flip the triangle upside-down.
     }
 )glsl";
 
@@ -27,6 +30,7 @@ const char *fragmentSource = R"glsl(
     out vec4 outColor;
     void main() {
         outColor = vec4(Color, 1.0);
+        //outColor = vec4(1.0 - Color.r, 1.0 - Color.g, 1.0 - Color.b, 1.0); This will invert the colors.
     }
 )glsl";
 
@@ -55,9 +59,19 @@ int main(int argc, char *argv[])
     SDL_Event windowEvent;
 
     float vertices[] = {
-        0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        0.0f, 0.4f, 0.0f, 1.0f, 0.0f,
-        0.3f, 0.0f, 1.0f, 0.0f, 0.0f
+        0.0f, 0.0f, 0.5f,
+        0.0f, 0.4f, 0.2f,
+        0.3f, 0.0f, 1.0f
+        /*
+        0.0f, 0.0f, 0.0f, 0.0f, 1.0f,  //0
+        0.0f, 0.4f, 0.0f, 1.0f, 0.0f,  //1
+        0.3f, 0.0f, 1.0f, 0.0f, 0.0f,  //2
+        0.3f, 0.4f, 1.0f, 1.0f, 1.0f   //3
+        */
+    };
+
+    GLuint elements[] {
+        0, 1, 2
     };
 
     GLuint vao;
@@ -68,6 +82,11 @@ int main(int argc, char *argv[])
     glGenBuffers(1, &vertexBufObj);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufObj);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
@@ -86,6 +105,16 @@ int main(int argc, char *argv[])
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragStatus);
     // 1 - Success; 0 - Compiler Error;
     printf("Vertex Status: %d\nFragment Status: %d\n", vertStatus, fragStatus);
+    
+    //Report any warnings/errors while compiling the vertex shader.
+    char vertexLogBuffer[512];
+    glGetShaderInfoLog(vertexShader, 512, NULL, vertexLogBuffer);
+    printf("%s", vertexLogBuffer);
+
+    //Report any warnings/errors while compiling the fragment shader.
+    char fragmentLogBuffer[512];
+    glGetShaderInfoLog(fragmentShader, 512, NULL, fragmentLogBuffer);
+    printf("%s", fragmentLogBuffer);
 
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
@@ -103,15 +132,17 @@ int main(int argc, char *argv[])
     // Fifth arg indicates the number of bytes until the next vertex position data.
     // The second zero (last arg) is because there is zero bytes of offset to find the first position.
     /// 'Position" is the first attribute given to a vertex in this example.
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), 0);
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, (3*sizeof(GLfloat)), 0);
+    //glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), 0);
     glEnableVertexAttribArray(posAttrib);
 
     GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
     glEnableVertexAttribArray(colAttrib);
-    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
+    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (3*sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
+    //glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (5*sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
 
     // vertices is an array of floats, but has 2 values per vertex.
-    int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
+    //int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
 
     bool drawing = true;
 
@@ -129,13 +160,13 @@ int main(int argc, char *argv[])
         //float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
         //glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
 
-
         // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // 0 - Number of vertices to skip.
-        glDrawArrays(GL_TRIANGLES, 0, numberOfVertices);
+        //glDrawArrays(GL_TRIANGLES, 0, numberOfVertices);
+        glDrawElements(GL_TRIANGLES, sizeof(elements)/sizeof(GLuint), GL_UNSIGNED_INT, 0);
         SDL_GL_SwapWindow(window);
     }
 
