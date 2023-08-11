@@ -37,9 +37,6 @@ void readShaderFromFile(const char*& shade, std::string filePath) {
 
 int main(int argc, char *argv[])
 {
-    //Code related to using a uniform to oscilate color was readded but commented out.
-    //auto t_start = std::chrono::high_resolution_clock::now();
-
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -139,9 +136,6 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(colAttrib);
     glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, (ATTR_PER_VERTEX * sizeof(GLfloat)), (void*)(2 * sizeof(GLfloat)));
 
-    // vertices is an array of floats, but has 2 values per vertex.
-    //int numberOfVertices = (sizeof(vertices) / sizeof(float)) / 2;
-
     bool drawing = true;
 
     while (drawing)
@@ -154,16 +148,11 @@ int main(int argc, char *argv[])
                 drawing = false;
         }
 
-        //auto t_start = std::chrono::high_resolution_clock::now();
-        //float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-        //glUniform3f(uniColor, (sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
-
         // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // 0 - Number of vertices to skip.
-        //glDrawArrays(GL_TRIANGLES, 0, numberOfVertices);
         glDrawElements(GL_TRIANGLES, sizeof(elements)/sizeof(GLuint), GL_UNSIGNED_INT, 0);
         SDL_GL_SwapWindow(window);
     }
