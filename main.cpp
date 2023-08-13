@@ -12,6 +12,9 @@
 #include <fstream>
 #include <string>
 
+const int TEXTURE_HEIGHT = 2;
+const int TEXTURE_WIDTH = 2;
+const int PIXEL_SIZE = 3;
 const int ATTR_PER_VERTEX = 5;
 const char *vertexSource;
 const char *fragmentSource;
@@ -71,6 +74,11 @@ int main(int argc, char *argv[])
         2, 3, 1
     };
 
+    float texturePixels[] = {
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0,    0.0f, 0.0f, 0.0f
+    };
+
     GLuint vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -84,6 +92,22 @@ int main(int argc, char *argv[])
     glGenBuffers(1, &ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+
+    GLuint texture;
+    glGenBuffers(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    //TODO: Figure out generating a mipmap.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //Generally better for 8-bit/retro look
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  //Generally better for higher-resolution photos
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+        ((sizeof(texturePixels) / sizeof(PIXEL_SIZE * texturePixels[0])) / TEXTURE_WIDTH),
+        ((sizeof(texturePixels) / sizeof(PIXEL_SIZE * texturePixels[0])) / TEXTURE_HEIGHT), //Since the texture array is a square, this is equal to the previous arg.
+        0, GL_RGB, GL_FLOAT, texturePixels);
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
